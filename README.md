@@ -1,7 +1,7 @@
 <!--
  * @Author: your name
  * @Date: 2020-05-08 09:10:36
- * @LastEditTime: 2020-05-09 17:30:23
+ * @LastEditTime: 2020-05-09 17:39:27
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /gdy-sentry-plugin/README.md
@@ -56,7 +56,7 @@ import Report from 'gdy-report'
 | env            | 环境变量     | TEST/PRE/（空）           |
 | appid          | 唯一标识     | 可为 appid 或其他唯一标识 |
 | uin            | 用户 uin     |                           |
-| Name           | 项目名称     |                           |
+| name           | 项目名称     |                           |
 
 ### 参考示例
 
