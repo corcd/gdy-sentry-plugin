@@ -1,7 +1,7 @@
 /*
  * @Author: Whzcorcd
  * @Date: 2020-05-08 09:30:56
- * @LastEditTime: 2020-05-09 15:04:02
+ * @LastEditTime: 2020-05-09 16:03:26
  * @Description: Tool's main entry
  * @FilePath: /gdy-sentry-plugin/bin/index.js
  */
@@ -457,5 +457,5 @@ if (typeof exports === 'object') {
   window.Report = Report
   Vue.use(Report)
 } else {
-  return false
+  module.exports = Report
 }
