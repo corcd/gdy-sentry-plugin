@@ -1,0 +1,42 @@
+{
+  "name": "gdy-report",
+  "version": "0.5.14",
+  "description": "Guangdianyun frontend sentry report tool",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "src/gdy-report.js",
+  "repository": "https://github.com/corcd/gdy-sentry-plugin.git",
+  "author": "Whzcorcd <whzcorcd@gmail.com>",
+  "license": "ISC",
+  "private": false,
+  "scripts": {
+    "dev": "gulp",
+    "build": "gulp build"
+  },
+  "keywords": [
+    "gdy",
+    "sentry",
+    "frontend",
+    "report"
+  ],
+  "homepage": "https://github.com/corcd/gdy-sentry-plugin",
+  "dependencies": {
+    "@sentry/browser": "5.15.5",
+    "@sentry/integrations": "^5.15.5",
+    "@sentry/node": "^5.15.5",
+    "gulp": "^4.0.2",
+    "gulp-clean": "^0.4.0",
+    "gulp-connect": "^5.7.0",
+    "gulp-rename": "^2.0.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "gulp-babel": "^8.0.0",
+    "gulp-strip-debug": "^3.0.0",
+    "gulp-uglify": "^3.0.2",
+    "gulp-util": "^3.0.8",
+    "vue": "^2.6.11"
+  }
+}
