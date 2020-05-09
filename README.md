@@ -1,7 +1,7 @@
 <!--
  * @Author: your name
  * @Date: 2020-05-08 09:10:36
- * @LastEditTime: 2020-05-09 17:39:27
+ * @LastEditTime: 2020-05-09 17:42:31
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /gdy-sentry-plugin/README.md
@@ -72,3 +72,11 @@ Report({
   name: 'Lcps-Monitor'
 })
 ```
+
+### TODO
+
+- [ ] 同时支持广电云 & 奥点云数据结构
+- [ ] 支持外部导入数据结构规则
+- [ ] 支持 React
+- [ ] 支持 Node 环境
+- [ ] class 改写，支持外部指令
