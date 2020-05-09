@@ -1,85 +1,85 @@
 /*
  * @Author: Whzcorcd
  * @Date: 2020-05-08 09:30:56
- * @LastEditTime: 2020-05-09 16:03:26
+ * @LastEditTime: 2020-05-10 00:51:20
  * @Description: Tool's main entry
  * @FilePath: /gdy-sentry-plugin/bin/index.js
  */
 const Sentry = require('@sentry/browser')
 // const Integrations = require('@sentry/integrations')
 
-// Report.init = function(option) {
-//   const opt = {
-//     // sentry dsn
-//     dsn = '',
-//     // 版本信息
-//     version = '1.0.0',
-//     // 环境变量
-//     env = ''
-//   }
+Report.init = function(option) {
+  const opt = {
+    // sentry dsn
+    dsn: '',
+    // 版本信息
+    version: '1.0.0',
+    // 环境变量
+    env: ''
+  }
 
-//   Object.assign(opt, option)
+  Object.assign(opt, option)
 
-//   let str = ''
-//   switch (opt.env) {
-//     case 'TEST':
-//       str = 'development'
-//       break
-//     case 'PRE':
-//       str = 'preview'
-//       break
-//     case '':
-//       str = 'production'
-//       break
-//     default:
-//       str = 'production'
-//       break
-//   }
-//   Sentry.init({
-//     dsn: String(opt.dsn),
-//     release: opt.version,
-//     environment: str
-//   })
-// }
+  let str = ''
+  switch (opt.env) {
+    case 'TEST':
+      str = 'development'
+      break
+    case 'PRE':
+      str = 'preview'
+      break
+    case '':
+      str = 'production'
+      break
+    default:
+      str = 'production'
+      break
+  }
+  Sentry.init({
+    dsn: String(opt.dsn),
+    release: opt.version,
+    environment: str
+  })
+}
 
-// Report.serUser = function(appid, uin, name = '', env) {
-//   Sentry.setUser({
-//     AppId: appid,
-//     Uin: uin,
-//     Name: name,
-//     Environment: env
-//   })
-// }
+Report.serUser = function(appid, uin, name = '', env = '') {
+  Sentry.setUser({
+    AppId: appid,
+    Uin: uin,
+    Name: name,
+    Environment: env
+  })
+}
 
-// Report.api = function(appid, uin, msg = 'Api Error', data) {
-//   Sentry.configureScope(function(scope) {
-//     scope.setTag('appid', appid)
-//     scope.setTag('uin', uin)
-//   })
-//   Sentry.setExtra('data', data)
-//   Sentry.captureException(new Error(msg))
-// }
+Report.api = function(appid, uin, msg = 'Api Error', data = {}) {
+  Sentry.configureScope(function(scope) {
+    scope.setTag('appid', appid)
+    scope.setTag('uin', uin)
+  })
+  Sentry.setExtra('data', data)
+  Sentry.captureException(new Error(msg))
+}
 
-// Report.info = function(appid, uin, msg = 'Info', data={}) {
-//   Sentry.configureScope(function(scope) {
-//     scope.setTag('appid', appid)
-//     scope.setTag('uin', uin)
-//   })
-//   Sentry.setExtra('data', data)
-//   Sentry.captureMessage(msg, 'info')
-// }
+Report.info = function(appid, uin, msg = 'Info', data = {}) {
+  Sentry.configureScope(function(scope) {
+    scope.setTag('appid', appid)
+    scope.setTag('uin', uin)
+  })
+  Sentry.setExtra('data', data)
+  Sentry.captureMessage(msg, 'info')
+}
 
-// Report.error = function(appid, uin, msg = 'New Error', data = {}) {
-//   Sentry.configureScope(function(scope) {
-//     scope.setTag('appid', appid)
-//     scope.setTag('uin', uin)
-//   })
-//   Sentry.setExtra('data', data)
-//   Sentry.captureException(new Error(msg))
-// }
+Report.error = function(appid, uin, msg = 'New Error', data = {}) {
+  Sentry.configureScope(function(scope) {
+    scope.setTag('appid', appid)
+    scope.setTag('uin', uin)
+  })
+  Sentry.setExtra('data', data)
+  Sentry.captureException(new Error(msg))
+}
 
 // report
-const Report = option => {
+function Report(option) {
   try {
     const filterUrl = [
       '/api/v1/report/web',
@@ -278,7 +278,7 @@ const Report = option => {
       }
       window.addEventListener('unhandledrejection', function(e) {
         const error = e && e.reason
-        const message = error.message || ''
+        const message = error.hasOwnProperty('message') ? error.message : ''
         const stack = error.stack || ''
         // Processing error
         let resourceUrl, col, line
@@ -289,10 +289,10 @@ const Report = option => {
             resourceUrl = $1
             return ''
           })
+          errs = errs.split(':')
         }
-        errs = errs.split(':')
         if (errs && errs.length > 1) line = parseInt(errs[1] || 0, 10)
-        col = parseInt(errs[2] || 0, 10)
+        if (errs && errs.length > 2) col = parseInt(errs[2] || 0, 10)
         const data = {
           t: new Date().getTime(),
           msg: message,
@@ -384,20 +384,42 @@ const Report = option => {
                   statusText: xhr.xhr.statusText || '',
                   method: xhr.args.method,
                   responseURL: xhr.args.url,
-                  response: response || {}
+                  data: response.data || {}
                 }
                 ajaxResponse('done', data)
               } else {
                 const response = JSON.parse(xhr.xhr.response)
-                if (Number(response.errorCode) !== 0) {
+                // 广电云接口
+                if (
+                  !responseURL.includes('aodian') &&
+                  Number(response.errorCode) !== 0
+                ) {
                   const data = {
+                    origin: 'gdy',
                     status: xhr.status,
                     statusText: xhr.xhr.statusText || '',
                     method: xhr.args.method,
                     responseURL: xhr.args.url,
-                    response: response || {},
+                    data: response.data || {},
                     errorCode: response.errorCode,
                     errorMessage: response.errorMessage
+                  }
+                  ajaxResponse('done', data)
+                }
+                //奥点接口
+                if (
+                  responseURL.includes('aodian') &&
+                  Number(response.code) !== 0
+                ) {
+                  const data = {
+                    origin: 'aodian',
+                    status: xhr.status,
+                    statusText: xhr.xhr.statusText || '',
+                    method: xhr.args.method,
+                    responseURL: xhr.args.url,
+                    data: response.data || {},
+                    code: response.code,
+                    msg: response.msg
                   }
                   ajaxResponse('done', data)
                 }
@@ -453,9 +475,6 @@ if (typeof exports === 'object') {
   define([], function() {
     return Report
   })
-} else if (window.Vue) {
-  window.Report = Report
-  Vue.use(Report)
 } else {
-  module.exports = Report
+  window.Report = Report
 }

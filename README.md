@@ -1,7 +1,7 @@
 <!--
  * @Author: your name
  * @Date: 2020-05-08 09:10:36
- * @LastEditTime: 2020-05-09 17:42:31
+ * @LastEditTime: 2020-05-10 00:51:51
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /gdy-sentry-plugin/README.md
@@ -49,14 +49,18 @@ import Report from 'gdy-report'
 
 ### 参数配置
 
-| parameter name | describe     | explain                   |
-| -------------- | ------------ | ------------------------- |
-| dsn            | sentry Dsn   | 从 sentry 项目中获取      |
-| version        | 当前项目版本 |                           |
-| env            | 环境变量     | TEST/PRE/（空）           |
-| appid          | 唯一标识     | 可为 appid 或其他唯一标识 |
-| uin            | 用户 uin     |                           |
-| name           | 项目名称     |                           |
+| parameter name | describe             | explain                   |
+| -------------- | -------------------- | ------------------------- |
+| dsn            | sentry Dsn           | 从 sentry 项目中获取      |
+| version        | 当前项目版本         |                           |
+| env            | 环境变量             | TEST/PRE/（空）           |
+| appid          | 唯一标识             | 可为 appid 或其他唯一标识 |
+| uin            | 用户 uin             |                           |
+| name           | 项目名称             |                           |
+| outtime        | 脚本延迟上报时间     | 默认 300ms                |
+| isPage         | 是否上报页面性能数据 | 默认 true                 |
+| isAjax         | 是否上报 ajax 数据   | 默认 true                 |
+| isError        | 是否上报错误信息     | 默认 true                 |
 
 ### 参考示例
 
@@ -65,18 +69,19 @@ import Report from 'gdy-report'
 
 Report({
   dsn: 'https://xxxxxxxxxxxxxxxxx@sentry.guangdianyun.tv/3',
-  version: pConfig.version,
-  env: env,
-  appid: appid,
-  uin: uin,
+  version: '1.0.2',
+  env: 'TEST',
+  appid: 'xxxxxxxxx',
+  uin: 1000,
   name: 'Lcps-Monitor'
 })
 ```
 
 ### TODO
 
-- [ ] 同时支持广电云 & 奥点云数据结构
+- [x] 同时支持广电云 & 奥点云数据结构
+- [x] 支持外部指令
 - [ ] 支持外部导入数据结构规则
-- [ ] 支持 React
+- [x] 支持 React
 - [ ] 支持 Node 环境
-- [ ] class 改写，支持外部指令
+- [ ] class 改写
