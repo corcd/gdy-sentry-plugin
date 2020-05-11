@@ -1,8 +1,8 @@
 <!--
- * @Author: your name
+ * @Author: Wzhcorcd
  * @Date: 2020-05-08 09:10:36
- * @LastEditTime: 2020-05-10 00:51:51
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2020-05-11 11:33:35
+ * @LastEditors: Wzhcorcd
  * @Description: In User Settings Edit
  * @FilePath: /gdy-sentry-plugin/README.md
  -->
@@ -11,7 +11,7 @@
 
 广电云非侵入式 Sentry 前端异常自动上报工具，可以一行代码实现 XHR/Fetch 异常收集、错误信息上报、页面性能统计等功能
 
-> 目前暂时支持普通 js 项目和 vue 项目，未来计划支持 react、node 等
+> 目前暂时支持前端 js 项目，未来计划支持 node 等
 
 ## 引入方式
 
@@ -75,6 +75,59 @@ Report({
   uin: 1000,
   name: 'Lcps-Monitor'
 })
+```
+
+### 外部命令
+
+#### Report.init
+
+提供在工具加载后初始化 Sentry 信息的功能，支持对象参数导入，对象支持 3 个参数（dsn，version，env），配置规则同配置列表所示
+
+```javascript
+const option = {
+  // sentry dsn
+  dsn: 'https://xxxxxxxxxxxxxxxxx@sentry.guangdianyun.tv/3',
+  // 版本信息
+  version: '1.0.0',
+  // 环境变量
+  env: 'TEST'
+}
+Report.init(option)
+```
+
+#### Report.serUser
+
+提供在工具加载后设置 Sentry 用户信息的功能，支持 4 个参数（appid, uin，name，env），配置规则同配置列表所示
+
+```javascript
+Report.setUser('xxxxxx', 1000, 'Lcps', 'TEST')
+```
+
+#### Report.api
+
+提供在自定义上报 Api 异常的功能，支持 3 个参数（appid, uin，data），其中 data 为数据体，配置规则同配置列表所示
+
+```javascript
+const { data } = await API()
+Report.api('xxxxxx', 1000, data)
+```
+
+#### Report.info
+
+提供在自定义上报提示信息的功能，支持 4 个参数（appid, uin，msg, data），其中 msg 为信息内容，data 为数据体，配置规则同配置列表所示
+
+```javascript
+const str = 'hello world'
+Report.api('xxxxxx', 1000, 'init message', str)
+```
+
+#### Report.error
+
+提供在自定义上报提示信息的功能，支持 4 个参数（appid, uin，msg, data），其中 msg 为错误内容，data 为数据体，配置规则同配置列表所示
+
+```javascript
+const error = 'data is undefined'
+Report.api('xxxxxx', 1000, 'i get error', error)
 ```
 
 ### TODO

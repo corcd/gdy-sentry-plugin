@@ -1,7 +1,7 @@
 /*
  * @Author: Whzcorcd
  * @Date: 2020-05-08 09:30:56
- * @LastEditTime: 2020-05-10 00:51:20
+ * @LastEditTime: 2020-05-11 11:32:50
  * @Description: Tool's main entry
  * @FilePath: /gdy-sentry-plugin/bin/index.js
  */
@@ -51,13 +51,13 @@ Report.serUser = function(appid, uin, name = '', env = '') {
   })
 }
 
-Report.api = function(appid, uin, msg = 'Api Error', data = {}) {
+Report.api = function(appid, uin, data = {}) {
   Sentry.configureScope(function(scope) {
     scope.setTag('appid', appid)
     scope.setTag('uin', uin)
   })
   Sentry.setExtra('data', data)
-  Sentry.captureException(new Error(msg))
+  Sentry.captureException(new Error('Api Error'))
 }
 
 Report.info = function(appid, uin, msg = 'Info', data = {}) {
