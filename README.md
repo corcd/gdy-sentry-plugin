@@ -1,7 +1,7 @@
 <!--
  * @Author: Wzhcorcd
  * @Date: 2020-05-08 09:10:36
- * @LastEditTime: 2020-05-11 11:33:35
+ * @LastEditTime: 2020-05-12 11:09:55
  * @LastEditors: Wzhcorcd
  * @Description: In User Settings Edit
  * @FilePath: /gdy-sentry-plugin/README.md
@@ -134,6 +134,7 @@ Report.api('xxxxxx', 1000, 'i get error', error)
 
 - [x] 同时支持广电云 & 奥点云数据结构
 - [x] 支持外部指令
+- [ ] 支持自定义域名过滤，包括正向过滤和反向过滤
 - [ ] 支持外部导入数据结构规则
 - [x] 支持 React
 - [ ] 支持 Node 环境

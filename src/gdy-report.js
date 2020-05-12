@@ -1,7 +1,7 @@
 /*
  * @Author: Whzcorcd
  * @Date: 2020-05-08 09:30:56
- * @LastEditTime: 2020-05-11 11:32:50
+ * @LastEditTime: 2020-05-12 11:01:01
  * @Description: Tool's main entry
  * @FilePath: /gdy-sentry-plugin/bin/index.js
  */
@@ -391,7 +391,7 @@ function Report(option) {
                 const response = JSON.parse(xhr.xhr.response)
                 // 广电云接口
                 if (
-                  !responseURL.includes('aodian') &&
+                  responseURL.includes('guangdianyun') &&
                   Number(response.errorCode) !== 0
                 ) {
                   const data = {
