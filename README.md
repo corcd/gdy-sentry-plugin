@@ -1,7 +1,7 @@
 <!--
  * @Author: Wzhcorcd
  * @Date: 2020-05-08 09:10:36
- * @LastEditTime: 2020-05-12 11:09:55
+ * @LastEditTime: 2020-05-15 09:24:51
  * @LastEditors: Wzhcorcd
  * @Description: In User Settings Edit
  * @FilePath: /gdy-sentry-plugin/README.md
@@ -49,18 +49,19 @@ import Report from 'gdy-report'
 
 ### 参数配置
 
-| parameter name | describe             | explain                   |
-| -------------- | -------------------- | ------------------------- |
-| dsn            | sentry Dsn           | 从 sentry 项目中获取      |
-| version        | 当前项目版本         |                           |
-| env            | 环境变量             | TEST/PRE/（空）           |
-| appid          | 唯一标识             | 可为 appid 或其他唯一标识 |
-| uin            | 用户 uin             |                           |
-| name           | 项目名称             |                           |
-| outtime        | 脚本延迟上报时间     | 默认 300ms                |
-| isPage         | 是否上报页面性能数据 | 默认 true                 |
-| isAjax         | 是否上报 ajax 数据   | 默认 true                 |
-| isError        | 是否上报错误信息     | 默认 true                 |
+| parameter name | describe             | explain                                        |
+| -------------- | -------------------- | ---------------------------------------------- |
+| dsn            | sentry Dsn           | 必选项，从 sentry 项目中获取，请优先使用 https |
+| version        | 当前项目版本         | 可从 package.json 取                           |
+| env            | 环境变量             | TEST/PRE/（空）                                |
+| appid          | 唯一标识             | 可为 appid 或其他唯一标识                      |
+| uin            | 用户 uin             |                                                |
+| name           | 项目名称             |                                                |
+| outtime        | 脚本延迟上报时间     | 默认 300ms                                     |
+| filterUrl      | url 过滤列表         | 列表内 url 将不再上报                          |
+| isPage         | 是否上报页面性能数据 | 默认 true                                      |
+| isAjax         | 是否上报 ajax 数据   | 默认 true                                      |
+| isError        | 是否上报错误信息     | 默认 true                                      |
 
 ### 参考示例
 
@@ -68,12 +69,17 @@ import Report from 'gdy-report'
 import Report from 'gdy-report'
 
 Report({
-  dsn: 'https://xxxxxxxxxxxxxxxxx@sentry.guangdianyun.tv/3',
+  dsn: 'https://xxxxxxxxxxxxxxxxx@sentry.guangdianyun.tv/x',
   version: '1.0.2',
   env: 'TEST',
   appid: 'xxxxxxxxx',
   uin: 1000,
-  name: 'Lcps-Monitor'
+  name: 'Gdy-Sentry',
+  outtime: 300,
+  filterUrl: ['xxx.xxx.com', 'yyy.yyy.com'],
+  isPage: true,
+  isAjax: true,
+  isError: true
 })
 ```
 
@@ -86,7 +92,7 @@ Report({
 ```javascript
 const option = {
   // sentry dsn
-  dsn: 'https://xxxxxxxxxxxxxxxxx@sentry.guangdianyun.tv/3',
+  dsn: 'https://xxxxxxxxxxxxxxxxx@sentry.guangdianyun.tv/x',
   // 版本信息
   version: '1.0.0',
   // 环境变量
@@ -132,9 +138,9 @@ Report.api('xxxxxx', 1000, 'i get error', error)
 
 ### TODO
 
-- [x] 同时支持广电云 & 奥点云数据结构
+- [x] 同时支持广电云 & 奥点云基本数据结构
 - [x] 支持外部指令
-- [ ] 支持自定义域名过滤，包括正向过滤和反向过滤
+- [x] 支持自定义域名过滤
 - [ ] 支持外部导入数据结构规则
 - [x] 支持 React
 - [ ] 支持 Node 环境

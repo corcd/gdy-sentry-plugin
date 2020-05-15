@@ -1,7 +1,7 @@
 /*
  * @Author: Whzcorcd
  * @Date: 2020-05-08 09:30:56
- * @LastEditTime: 2020-05-12 11:01:01
+ * @LastEditTime: 2020-05-15 09:27:44
  * @Description: Tool's main entry
  * @FilePath: /gdy-sentry-plugin/bin/index.js
  */
@@ -51,13 +51,13 @@ Report.serUser = function(appid, uin, name = '', env = '') {
   })
 }
 
-Report.api = function(appid, uin, data = {}) {
+Report.api = function(appid, uin, msg, data = {}) {
   Sentry.configureScope(function(scope) {
     scope.setTag('appid', appid)
     scope.setTag('uin', uin)
   })
   Sentry.setExtra('data', data)
-  Sentry.captureException(new Error('Api Error'))
+  Sentry.captureException(new Error(`Api Error:${msg}`))
 }
 
 Report.info = function(appid, uin, msg = 'Info', data = {}) {
@@ -82,9 +82,9 @@ Report.error = function(appid, uin, msg = 'New Error', data = {}) {
 function Report(option) {
   try {
     const filterUrl = [
-      '/api/v1/report/web',
-      'livereload.js?snipver=1',
-      '/sockjs-node/info'
+      '/sockjs-node/info',
+      'arms-retcode.aliyuncs.com',
+      'ynuf.aliapp.org'
     ]
     const opt = {
       // sentry dsn
@@ -319,14 +319,20 @@ function Report(option) {
 
     // ajax统一上报入口
     function ajaxResponse(type, data) {
+      const url = data.responseURL
+      if (filterUrl.includes(url)) {
+        return
+      }
       switch (type) {
         case 'done':
           Sentry.setExtra('data', data)
-          Sentry.captureException(new Error('Api Error'))
+          Sentry.captureException(
+            new Error(`Api Error:${data.msg || data.statusText}`)
+          )
           break
         case 'error':
           Sentry.setExtra('data', data)
-          Sentry.captureException(new Error('Request Error'))
+          Sentry.captureException(new Error(`Request Error:${data.statusText}`))
           break
         default:
           break
@@ -384,7 +390,8 @@ function Report(option) {
                   statusText: xhr.xhr.statusText || '',
                   method: xhr.args.method,
                   responseURL: xhr.args.url,
-                  data: response.data || {}
+                  data: response.data || {},
+                  msg: ''
                 }
                 ajaxResponse('done', data)
               } else {
@@ -392,7 +399,8 @@ function Report(option) {
                 // 广电云接口
                 if (
                   responseURL.includes('guangdianyun') &&
-                  Number(response.errorCode) !== 0
+                  Number(response.errorCode) !== 0 &&
+                  Number(response.errorCode) !== 1
                 ) {
                   const data = {
                     origin: 'gdy',
@@ -402,7 +410,7 @@ function Report(option) {
                     responseURL: xhr.args.url,
                     data: response.data || {},
                     errorCode: response.errorCode,
-                    errorMessage: response.errorMessage
+                    msg: response.errorMessage
                   }
                   ajaxResponse('done', data)
                 }
