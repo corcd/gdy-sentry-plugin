@@ -1,6 +1,6 @@
 {
   "name": "gdy-report",
-  "version": "0.6.8",
+  "version": "0.6.11",
   "description": "Guangdianyun frontend sentry report tool",
   "publishConfig": {
     "access": "public"

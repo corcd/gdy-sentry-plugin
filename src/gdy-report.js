@@ -1,7 +1,7 @@
 /*
  * @Author: Whzcorcd
  * @Date: 2020-05-08 09:30:56
- * @LastEditTime: 2020-05-15 09:27:44
+ * @LastEditTime: 2020-05-15 10:00:52
  * @Description: Tool's main entry
  * @FilePath: /gdy-sentry-plugin/bin/index.js
  */
@@ -320,7 +320,7 @@ function Report(option) {
     // ajax统一上报入口
     function ajaxResponse(type, data) {
       const url = data.responseURL
-      if (filterUrl.includes(url)) {
+      if (filterUrl.some(item => url.includes(item))) {
         return
       }
       switch (type) {
