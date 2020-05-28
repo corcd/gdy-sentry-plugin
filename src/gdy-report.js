@@ -1,7 +1,7 @@
 /*
  * @Author: Whzcorcd
  * @Date: 2020-05-08 09:30:56
- * @LastEditTime: 2020-05-15 10:00:52
+ * @LastEditTime: 2020-05-26 10:10:11
  * @Description: Tool's main entry
  * @FilePath: /gdy-sentry-plugin/bin/index.js
  */
@@ -42,7 +42,7 @@ Report.init = function(option) {
   })
 }
 
-Report.serUser = function(appid, uin, name = '', env = '') {
+Report.setUser = function(appid, uin, name = '', env = '') {
   Sentry.setUser({
     AppId: appid,
     Uin: uin,
@@ -56,6 +56,8 @@ Report.api = function(appid, uin, msg, data = {}) {
     scope.setTag('appid', appid)
     scope.setTag('uin', uin)
   })
+  Sentry.setTag('Uin', uin)
+  Sentry.setTag('Appid', appid)
   Sentry.setExtra('data', data)
   Sentry.captureException(new Error(`Api Error:${msg}`))
 }
@@ -65,6 +67,8 @@ Report.info = function(appid, uin, msg = 'Info', data = {}) {
     scope.setTag('appid', appid)
     scope.setTag('uin', uin)
   })
+  Sentry.setTag('Uin', uin)
+  Sentry.setTag('Appid', appid)
   Sentry.setExtra('data', data)
   Sentry.captureMessage(msg, 'info')
 }
@@ -74,6 +78,8 @@ Report.error = function(appid, uin, msg = 'New Error', data = {}) {
     scope.setTag('appid', appid)
     scope.setTag('uin', uin)
   })
+  Sentry.setTag('Uin', uin)
+  Sentry.setTag('Appid', appid)
   Sentry.setExtra('data', data)
   Sentry.captureException(new Error(msg))
 }
@@ -104,15 +110,15 @@ function Report(option) {
       // ajax请求时需要过滤的url信息
       filterUrl: [],
       // 是否上报页面性能数据
-      isPage: true,
+      isPage: false,
       // 是否上报ajax数据
       isAjax: true,
       // 是否上报错误信息
       isError: true
     }
     Object.assign(opt, option)
-    console.log(opt)
     opt.filterUrl = opt.filterUrl.concat(filterUrl)
+    console.log(opt)
     let str = ''
     switch (opt.env) {
       case 'TEST':
@@ -166,9 +172,11 @@ function Report(option) {
     function reportData(type, msg = '', data = {}) {
       setTimeout(() => {
         if (type === 'info') {
+          Sentry.setTag('Uin', opt.uin)
           Sentry.setExtra('data', data)
           Sentry.captureMessage(msg, 'info')
         } else if (type === 'error') {
+          Sentry.setTag('Uin', opt.uin)
           Sentry.setExtra('data', data)
           Sentry.captureException(new Error(msg))
         }
@@ -325,12 +333,16 @@ function Report(option) {
       }
       switch (type) {
         case 'done':
+          Sentry.setTag('Uin', opt.uin)
+          Sentry.setTag('Appid', opt.Appid)
           Sentry.setExtra('data', data)
           Sentry.captureException(
             new Error(`Api Error:${data.msg || data.statusText}`)
           )
           break
         case 'error':
+          Sentry.setTag('Uin', opt.uin)
+          Sentry.setTag('Appid', opt.Appid)
           Sentry.setExtra('data', data)
           Sentry.captureException(new Error(`Request Error:${data.statusText}`))
           break
@@ -378,81 +390,95 @@ function Report(option) {
       _Ajax({
         onreadystatechange: function(xhr) {
           if (xhr.readyState === 4) {
-            setTimeout(() => {
+            try {
               const responseURL = xhr.xhr.responseURL
                 ? xhr.xhr.responseURL.split('?')[0]
                 : ''
-              if (xhr.status < 200 || xhr.status > 300) {
-                xhr.method = xhr.args.method
-                const response = JSON.parse(xhr.xhr.response)
-                const data = {
-                  status: xhr.status,
-                  statusText: xhr.xhr.statusText || '',
-                  method: xhr.args.method,
-                  responseURL: xhr.args.url,
-                  data: response.data || {},
-                  msg: ''
-                }
-                ajaxResponse('done', data)
-              } else {
-                const response = JSON.parse(xhr.xhr.response)
-                // 广电云接口
-                if (
-                  responseURL.includes('guangdianyun') &&
-                  Number(response.errorCode) !== 0 &&
-                  Number(response.errorCode) !== 1
-                ) {
-                  const data = {
-                    origin: 'gdy',
-                    status: xhr.status,
-                    statusText: xhr.xhr.statusText || '',
-                    method: xhr.args.method,
-                    responseURL: xhr.args.url,
-                    data: response.data || {},
-                    errorCode: response.errorCode,
-                    msg: response.errorMessage
-                  }
-                  ajaxResponse('done', data)
-                }
-                //奥点接口
-                if (
-                  responseURL.includes('aodian') &&
-                  Number(response.code) !== 0
-                ) {
-                  const data = {
-                    origin: 'aodian',
-                    status: xhr.status,
-                    statusText: xhr.xhr.statusText || '',
-                    method: xhr.args.method,
-                    responseURL: xhr.args.url,
-                    data: response.data || {},
-                    code: response.code,
-                    msg: response.msg
-                  }
-                  ajaxResponse('done', data)
-                }
+              if (
+                opt.filterUrl.some(item => responseURL.includes(item)) ||
+                !responseURL
+              ) {
+                return
               }
-            }, 600)
+              setTimeout(() => {
+                if (xhr.status < 200 || xhr.status > 300) {
+                  xhr.method = xhr.args.method
+                  const response = xhr.xhr.response
+                    ? JSON.parse(xhr.xhr.response)
+                    : {}
+                  const data = {
+                    status: xhr.status,
+                    statusText: xhr.xhr.statusText || '',
+                    method: xhr.args.method,
+                    responseURL: xhr.args.url,
+                    data: response.data || null,
+                    msg: ''
+                  }
+                  ajaxResponse('done', data)
+                } else {
+                  const response = xhr.xhr.response
+                    ? JSON.parse(xhr.xhr.response)
+                    : {}
+                  // 广电云接口
+                  if (
+                    responseURL.includes('guangdianyun') &&
+                    Number(response.errorCode) !== 0 &&
+                    Number(response.errorCode) !== 1
+                  ) {
+                    const data = {
+                      origin: 'gdy',
+                      status: xhr.status,
+                      statusText: xhr.xhr.statusText || '',
+                      method: xhr.args.method,
+                      responseURL: xhr.args.url,
+                      data: response.data || null,
+                      errorCode: response.errorCode || 0,
+                      msg: response.errorMessage || ''
+                    }
+                    ajaxResponse('done', data)
+                  }
+                  //奥点接口
+                  if (
+                    responseURL.includes('aodianyun.com') &&
+                    Number(response.code) !== 0
+                  ) {
+                    const data = {
+                      origin: 'aodian',
+                      status: xhr.status,
+                      statusText: xhr.xhr.statusText || '',
+                      method: xhr.args.method,
+                      responseURL: xhr.args.url,
+                      data: response.data || null,
+                      code: response.code || 0,
+                      msg: response.msg || ''
+                    }
+                    ajaxResponse('done', data)
+                  }
+                }
+              }, 600)
+            } catch (e) {
+              // ignore
+            }
           }
         },
         onerror: function(xhr) {
           if (xhr.args) {
+            const responseURL = xhr.args.url ? xhr.args.url.split('?')[0] : ''
+            if (
+              opt.filterUrl.some(item => responseURL.includes(item)) ||
+              !responseURL
+            ) {
+              return
+            }
             const data = {
               method: xhr.args.method,
-              responseURL: xhr.args.url,
+              responseURL: responseURL,
               statusText: 'xhr request error'
             }
             ajaxResponse('error', data)
           }
         },
         open: function(arg, xhr) {
-          if (opt.filterUrl && opt.filterUrl.length) {
-            let begin = false
-            opt.filterUrl.forEach(item => {
-              if (arg[1].indexOf(item) != -1) begin = true
-            })
-            if (begin) return
-          }
           this.args = {
             url: arg[1].split('?')[0],
             method: arg[0] || 'GET',
@@ -468,7 +494,7 @@ function Report(option) {
       'load',
       function() {
         //页面性能上报
-        perforPage()
+        if (opt.isPage) perforPage()
       },
       false
     )

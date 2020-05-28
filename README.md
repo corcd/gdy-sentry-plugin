@@ -1,7 +1,7 @@
 <!--
  * @Author: Wzhcorcd
  * @Date: 2020-05-08 09:10:36
- * @LastEditTime: 2020-05-15 09:24:51
+ * @LastEditTime: 2020-05-18 21:44:54
  * @LastEditors: Wzhcorcd
  * @Description: In User Settings Edit
  * @FilePath: /gdy-sentry-plugin/README.md
@@ -59,7 +59,7 @@ import Report from 'gdy-report'
 | name           | 项目名称             |                                                |
 | outtime        | 脚本延迟上报时间     | 默认 300ms                                     |
 | filterUrl      | url 过滤列表         | 列表内 url 将不再上报                          |
-| isPage         | 是否上报页面性能数据 | 默认 true                                      |
+| isPage         | 是否上报页面性能数据 | 默认 false                                     |
 | isAjax         | 是否上报 ajax 数据   | 默认 true                                      |
 | isError        | 是否上报错误信息     | 默认 true                                      |
 
@@ -77,7 +77,7 @@ Report({
   name: 'Gdy-Sentry',
   outtime: 300,
   filterUrl: ['xxx.xxx.com', 'yyy.yyy.com'],
-  isPage: true,
+  isPage: false,
   isAjax: true,
   isError: true
 })
@@ -101,7 +101,7 @@ const option = {
 Report.init(option)
 ```
 
-#### Report.serUser
+#### Report.setUser
 
 提供在工具加载后设置 Sentry 用户信息的功能，支持 4 个参数（appid, uin，name，env），配置规则同配置列表所示
 
