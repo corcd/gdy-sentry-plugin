@@ -1,7 +1,7 @@
 <!--
  * @Author: Wzhcorcd
  * @Date: 2020-05-08 09:10:36
- * @LastEditTime: 2020-05-18 21:44:54
+ * @LastEditTime: 2020-06-09 14:56:28
  * @LastEditors: Wzhcorcd
  * @Description: In User Settings Edit
  * @FilePath: /gdy-sentry-plugin/README.md
@@ -49,19 +49,60 @@ import Report from 'gdy-report'
 
 ### 参数配置
 
-| parameter name | describe             | explain                                        |
-| -------------- | -------------------- | ---------------------------------------------- |
-| dsn            | sentry Dsn           | 必选项，从 sentry 项目中获取，请优先使用 https |
-| version        | 当前项目版本         | 可从 package.json 取                           |
-| env            | 环境变量             | TEST/PRE/（空）                                |
-| appid          | 唯一标识             | 可为 appid 或其他唯一标识                      |
-| uin            | 用户 uin             |                                                |
-| name           | 项目名称             |                                                |
-| outtime        | 脚本延迟上报时间     | 默认 300ms                                     |
-| filterUrl      | url 过滤列表         | 列表内 url 将不再上报                          |
-| isPage         | 是否上报页面性能数据 | 默认 false                                     |
-| isAjax         | 是否上报 ajax 数据   | 默认 true                                      |
-| isError        | 是否上报错误信息     | 默认 true                                      |
+| parameter name | describe             | explain                                                               |
+| -------------- | -------------------- | --------------------------------------------------------------------- |
+| dsn            | sentry Dsn           | 必选项，从 sentry 项目中获取，请优先使用 https                        |
+| version        | 当前项目版本         | 可从 package.json 取                                                  |
+| env            | 环境变量             | TEST/PRE/（空）                                                       |
+| appid          | 唯一标识             | 可为 appid 或其他唯一标识                                             |
+| uin            | 用户 uin             |                                                                       |
+| name           | 项目名称             |                                                                       |
+| outtime        | 脚本延迟上报时间     | 默认 300ms                                                            |
+| filterUrl      | url 过滤列表         | 过滤列表内 url ，将不再自动上报                                       |
+| apiRules       | api 规则列表         | 使用固有格式定制 api 校验规范（不符合的 api 将 上报），详情见单独说明 |
+| isPage         | 是否上报页面性能数据 | 默认 false                                                            |
+| isAjax         | 是否上报 ajax 数据   | 默认 true                                                             |
+| isError        | 是否上报错误信息     | 默认 true                                                             |
+
+### API Rules
+
+单个 rule 示例：
+
+```javascript
+{
+  url: 'xxxxx',
+  rules: {
+    data: { name: 'data', permission: [] },
+    identify: { name: 'data', permission: [] },
+    msg: { name: 'errorMessage', permission: [] }
+  }
+}
+```
+
+data、identify、msg 为固有字段，分别匹配所需要上报的数据体的 data、errorCode、msg 部分。其中的 name 为 response 体内对应项的字段名，permission 为允许的值的集合数组（为空时表示所有值都被允许）。
+
+若 response 内相应 name 的数据，不为其 permission 中任一元素，则该条记录将会被上报至 sentry
+
+当前内部已集成最基础的 Api 规则：
+
+```javascript
+{
+  url: 'guangdianyun.tv',
+  rules: {
+    data: { name: 'data', permission: [] },
+    identify: { name: 'errorCode', permission: [0, 1] },
+    msg: { name: 'errorMessage', permission: [] }
+  }
+},
+{
+  url: 'aodianyun.com',
+  rules: {
+    data: { name: 'data', permission: [] },
+    identify: { name: 'code', permission: [0] },
+    msg: { name: 'msg', permission: [] }
+  }
+}
+```
 
 ### 参考示例
 
@@ -141,7 +182,6 @@ Report.api('xxxxxx', 1000, 'i get error', error)
 - [x] 同时支持广电云 & 奥点云基本数据结构
 - [x] 支持外部指令
 - [x] 支持自定义域名过滤
-- [ ] 支持外部导入数据结构规则
+- [x] 支持外部导入数据结构规则
 - [x] 支持 React
 - [ ] 支持 Node 环境
-- [ ] class 改写

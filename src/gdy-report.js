@@ -1,7 +1,7 @@
 /*
  * @Author: Whzcorcd
  * @Date: 2020-05-08 09:30:56
- * @LastEditTime: 2020-05-26 10:10:11
+ * @LastEditTime: 2020-06-09 13:50:21
  * @Description: Tool's main entry
  * @FilePath: /gdy-sentry-plugin/bin/index.js
  */
@@ -20,34 +20,49 @@ Report.init = function(option) {
 
   Object.assign(opt, option)
 
-  let str = ''
+  const environment = ''
   switch (opt.env) {
     case 'TEST':
-      str = 'development'
+      environment.concat('development')
       break
     case 'PRE':
-      str = 'preview'
+      environment.concat('preview')
       break
     case '':
-      str = 'production'
+      environment.concat('production')
       break
     default:
-      str = 'production'
+      environment.concat('production')
       break
   }
   Sentry.init({
     dsn: String(opt.dsn),
     release: opt.version,
-    environment: str
+    environment: environment
   })
 }
 
 Report.setUser = function(appid, uin, name = '', env = '') {
+  const environment = ''
+  switch (env) {
+    case 'TEST':
+      environment.concat('development')
+      break
+    case 'PRE':
+      environment.concat('preview')
+      break
+    case '':
+      environment.concat('production')
+      break
+    default:
+      environment.concat('production')
+      break
+  }
   Sentry.setUser({
     AppId: appid,
     Uin: uin,
     Name: name,
-    Environment: env
+    Environment: environment
   })
 }
 
@@ -90,7 +105,26 @@ function Report(option) {
     const filterUrl = [
       '/sockjs-node/info',
       'arms-retcode.aliyuncs.com',
+      'aliyuncs.com',
       'ynuf.aliapp.org'
+    ]
+    const apiRules = [
+      {
+        url: 'guangdianyun.tv',
+        rules: {
+          data: { name: 'data', permission: [] },
+          identify: { name: 'errorCode', permission: [0, 1] },
+          msg: { name: 'errorMessage', permission: [] }
+        }
+      },
+      {
+        url: 'aodianyun.com',
+        rules: {
+          data: { name: 'data', permission: [] },
+          identify: { name: 'code', permission: [0] },
+          msg: { name: 'msg', permission: [] }
+        }
+      }
     ]
     const opt = {
       // sentry dsn
@@ -107,31 +141,45 @@ function Report(option) {
       name: '',
       // 脚本延迟上报时间
       outtime: 300,
-      // ajax请求时需要过滤的url信息
+      // ajax 请求时需要过滤的 url 信息
       filterUrl: [],
+      // api 校验规则
+      apiRules: [],
       // 是否上报页面性能数据
       isPage: false,
-      // 是否上报ajax数据
+      // 是否上报 ajax 数据
       isAjax: true,
       // 是否上报错误信息
       isError: true
     }
+    // apiRules 格式
+    // const apiRules = {
+    //   url: 'xxxxx',
+    //   rules: {
+    //     data: { name: 'data', permission: [] },
+    //     identify: { name: 'data', permission: [] },
+    //     msg: { name: 'errorMessage', permission: [] }
+    //   }
+    // }
+
     Object.assign(opt, option)
     opt.filterUrl = opt.filterUrl.concat(filterUrl)
+    opt.apiRules = opt.apiRules.concat(apiRules)
     console.log(opt)
-    let str = ''
+
+    const environment = ''
     switch (opt.env) {
       case 'TEST':
-        str = 'development'
+        environment.concat('development')
         break
       case 'PRE':
-        str = 'preview'
+        environment.concat('preview')
         break
       case '':
-        str = 'production'
+        environment.concat('production')
         break
       default:
-        str = 'production'
+        environment.concat('production')
         break
     }
 
@@ -168,15 +216,52 @@ function Report(option) {
       reportData('info', 'Page Performance', data)
     }
 
+    // 类型分配
+    function sortOut(responseURL, xhr) {
+      const ruleObject = opt.apiRules.filter(item =>
+        responseURL.includes(item.url)
+      )
+      if (!ruleObject) return
+
+      const rules = ruleObject.rules || []
+      if (!rules) return
+
+      // 解析数据
+      const response = {}
+      if (
+        xhr.xhr.response &&
+        typeof xhr.xhr.response === 'string' &&
+        xhr.xhr.response.length > 0
+      ) {
+        const temp = JSON.parse(xhr.xhr.response)
+        Object.assign(response, temp)
+      }
+
+      // 接口校验
+      const res = rules.every(item => {
+        item.permission.length === 0 ||
+          item.permission.includes(response[item.name])
+      })
+
+      const data = {
+        status: xhr.status,
+        statusText: xhr.xhr.statusText || '',
+        method: xhr.args.method,
+        responseURL: xhr.args.url,
+        data: response[rules.data.name] || null,
+        identify: response[rules.identify.name] || null,
+        msg: response[rules.msg.name] || ''
+      }
+      res && ajaxResponse('done', data)
+    }
+
     // report date
     function reportData(type, msg = '', data = {}) {
       setTimeout(() => {
         if (type === 'info') {
-          Sentry.setTag('Uin', opt.uin)
           Sentry.setExtra('data', data)
           Sentry.captureMessage(msg, 'info')
         } else if (type === 'error') {
-          Sentry.setTag('Uin', opt.uin)
           Sentry.setExtra('data', data)
           Sentry.captureException(new Error(msg))
         }
@@ -333,16 +418,12 @@ function Report(option) {
       }
       switch (type) {
         case 'done':
-          Sentry.setTag('Uin', opt.uin)
-          Sentry.setTag('Appid', opt.Appid)
           Sentry.setExtra('data', data)
           Sentry.captureException(
             new Error(`Api Error:${data.msg || data.statusText}`)
           )
           break
         case 'error':
-          Sentry.setTag('Uin', opt.uin)
-          Sentry.setTag('Appid', opt.Appid)
           Sentry.setExtra('data', data)
           Sentry.captureException(new Error(`Request Error:${data.statusText}`))
           break
@@ -356,31 +437,22 @@ function Report(option) {
         performance.clearResourceTimings()
     }
 
-    // if (window.Vue && opt.isError) {
-    //   Sentry.init({
-    //     dsn: opt.dsn,
-    //     integrations: [
-    //       new Integrations.Vue({
-    //         Vue,
-    //         attachProps: true
-    //       })
-    //     ],
-    //     release: opt.version,
-    //     environment: str
-    //   })
-    // } else {
     Sentry.init({
       dsn: opt.dsn,
       release: opt.version,
-      environment: str
+      environment: environment
     })
 
     Sentry.setUser({
       AppId: opt.appid,
       Uin: opt.uin,
       Name: opt.name,
-      Environment: str
+      Environment: environment
     })
+
+    Sentry.setTag('Package', require('../package.json').version)
+    Sentry.setTag('Uin', opt.uin)
+    Sentry.setTag('Appid', opt.Appid)
 
     // error上报
     if (opt.isError) _error()
@@ -389,76 +461,38 @@ function Report(option) {
     if (opt.isAjax || opt.isError) {
       _Ajax({
         onreadystatechange: function(xhr) {
+          // 0：初始化，XMLHttpRequest 对象还没有完成初始化
+          // 1：载入，XMLHttpRequest 对象开始发送请求
+          // 2：载入完成，XMLHttpRequest 对象的请求发送完成
+          // 3：解析，XMLHttpRequest 对象开始读取服务器的响应
+          // 4：完成，XMLHttpRequest 对象读取服务器响应结束
           if (xhr.readyState === 4) {
-            try {
-              const responseURL = xhr.xhr.responseURL
-                ? xhr.xhr.responseURL.split('?')[0]
-                : ''
-              if (
-                opt.filterUrl.some(item => responseURL.includes(item)) ||
-                !responseURL
-              ) {
-                return
-              }
-              setTimeout(() => {
-                if (xhr.status < 200 || xhr.status > 300) {
-                  xhr.method = xhr.args.method
-                  const response = xhr.xhr.response
-                    ? JSON.parse(xhr.xhr.response)
-                    : {}
-                  const data = {
-                    status: xhr.status,
-                    statusText: xhr.xhr.statusText || '',
-                    method: xhr.args.method,
-                    responseURL: xhr.args.url,
-                    data: response.data || null,
-                    msg: ''
-                  }
-                  ajaxResponse('done', data)
-                } else {
-                  const response = xhr.xhr.response
-                    ? JSON.parse(xhr.xhr.response)
-                    : {}
-                  // 广电云接口
-                  if (
-                    responseURL.includes('guangdianyun') &&
-                    Number(response.errorCode) !== 0 &&
-                    Number(response.errorCode) !== 1
-                  ) {
-                    const data = {
-                      origin: 'gdy',
-                      status: xhr.status,
-                      statusText: xhr.xhr.statusText || '',
-                      method: xhr.args.method,
-                      responseURL: xhr.args.url,
-                      data: response.data || null,
-                      errorCode: response.errorCode || 0,
-                      msg: response.errorMessage || ''
-                    }
-                    ajaxResponse('done', data)
-                  }
-                  //奥点接口
-                  if (
-                    responseURL.includes('aodianyun.com') &&
-                    Number(response.code) !== 0
-                  ) {
-                    const data = {
-                      origin: 'aodian',
-                      status: xhr.status,
-                      statusText: xhr.xhr.statusText || '',
-                      method: xhr.args.method,
-                      responseURL: xhr.args.url,
-                      data: response.data || null,
-                      code: response.code || 0,
-                      msg: response.msg || ''
-                    }
-                    ajaxResponse('done', data)
-                  }
-                }
-              }, 600)
-            } catch (e) {
-              // ignore
+            const responseURL = xhr.xhr.responseURL
+              ? xhr.xhr.responseURL.split('?')[0]
+              : ''
+            if (
+              opt.filterUrl.some(item => responseURL.includes(item)) ||
+              !responseURL
+            ) {
+              return
             }
+
+            setTimeout(() => {
+              if (xhr.status < 200 || xhr.status > 300) {
+                xhr.method = xhr.args.method
+                const data = {
+                  status: xhr.status,
+                  statusText: xhr.xhr.statusText || '',
+                  method: xhr.args.method,
+                  responseURL: xhr.args.url,
+                  data: xhr.xhr.response || null,
+                  msg: ''
+                }
+                ajaxResponse('done', data)
+              } else {
+                sortOut(responseURL, xhr)
+              }
+            }, 600)
           }
         },
         onerror: function(xhr) {
@@ -473,7 +507,7 @@ function Report(option) {
             const data = {
               method: xhr.args.method,
               responseURL: responseURL,
-              statusText: 'xhr request error'
+              statusText: 'XHR request error'
             }
             ajaxResponse('error', data)
           }
