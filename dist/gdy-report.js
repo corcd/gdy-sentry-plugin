@@ -1,7 +1,7 @@
 /*
  * @Author: Whzcorcd
  * @Date: 2020-05-08 09:30:56
- * @LastEditTime: 2020-06-10 14:53:32
+ * @LastEditTime: 2020-06-10 15:18:12
  * @Description: Tool's main entry
  * @FilePath: /gdy-sentry-plugin/bin/index.js
  */
@@ -116,15 +116,15 @@ function Report(option) {
           identify: { name: 'errorCode', permission: [0, 1] },
           msg: { name: 'errorMessage', permission: [] }
         }
-      },
-      {
-        url: 'aodianyun.com',
-        rules: {
-          data: { name: 'data', permission: [] },
-          identify: { name: 'code', permission: [0] },
-          msg: { name: 'msg', permission: [] }
-        }
       }
+      // {
+      //   url: 'aodianyun.com',
+      //   rules: {
+      //     data: { name: 'data', permission: [] },
+      //     identify: { name: 'code', permission: [0] },
+      //     msg: { name: 'msg', permission: [] }
+      //   }
+      // }
     ]
     const opt = {
       // sentry dsn
