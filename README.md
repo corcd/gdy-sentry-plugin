@@ -1,7 +1,7 @@
 <!--
  * @Author: Wzhcorcd
  * @Date: 2020-05-08 09:10:36
- * @LastEditTime: 2020-06-09 14:56:28
+ * @LastEditTime: 2020-06-09 16:09:08
  * @LastEditors: Wzhcorcd
  * @Description: In User Settings Edit
  * @FilePath: /gdy-sentry-plugin/README.md
@@ -79,11 +79,11 @@ import Report from 'gdy-report'
 }
 ```
 
-data、identify、msg 为固有字段，分别匹配所需要上报的数据体的 data、errorCode、msg 部分。其中的 name 为 response 体内对应项的字段名，permission 为允许的值的集合数组（为空时表示所有值都被允许）。
+data、identify、msg 为固有字段，分别匹配所需要上报的数据体的 data、errorCode、msg 部分。其中的 name 为 response 体内对应项的字段名，permission 为允许的值的集合数组（为空时表示所有值都被允许），重复值暂时是不被允许的，会引发插件错误。
 
 若 response 内相应 name 的数据，不为其 permission 中任一元素，则该条记录将会被上报至 sentry
 
-当前内部已集成最基础的 Api 规则：
+当前内部已集成最基础的 Api 规则，无须自定义：
 
 ```javascript
 {

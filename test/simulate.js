@@ -1,13 +1,10 @@
 /*
  * @Author: Whzcorcd
  * @Date: 2020-05-08 09:30:56
- * @LastEditTime: 2020-06-10 14:53:32
+ * @LastEditTime: 2020-06-10 14:52:52
  * @Description: Tool's main entry
  * @FilePath: /gdy-sentry-plugin/bin/index.js
  */
-const Sentry = require('@sentry/browser')
-// const Integrations = require('@sentry/integrations')
-
 Report.init = function(option) {
   const opt = {
     // sentry dsn
@@ -35,7 +32,7 @@ Report.init = function(option) {
       environment = 'production'
       break
   }
-  Sentry.init({
+  console.log({
     dsn: String(opt.dsn),
     release: opt.version,
     environment: environment
@@ -58,7 +55,7 @@ Report.setUser = function(appid, uin, name = '', env = '') {
       environment = 'production'
       break
   }
-  Sentry.setUser({
+  console.log({
     AppId: appid,
     Uin: uin,
     Name: name,
@@ -67,36 +64,15 @@ Report.setUser = function(appid, uin, name = '', env = '') {
 }
 
 Report.api = function(appid, uin, msg, data = {}) {
-  Sentry.configureScope(function(scope) {
-    scope.setTag('appid', appid)
-    scope.setTag('uin', uin)
-  })
-  Sentry.setTag('Uin', uin)
-  Sentry.setTag('Appid', appid)
-  Sentry.setExtra('data', data)
-  Sentry.captureException(new Error(`Api Error:${msg}`))
+  // todo
 }
 
 Report.info = function(appid, uin, msg = 'Info', data = {}) {
-  Sentry.configureScope(function(scope) {
-    scope.setTag('appid', appid)
-    scope.setTag('uin', uin)
-  })
-  Sentry.setTag('Uin', uin)
-  Sentry.setTag('Appid', appid)
-  Sentry.setExtra('data', data)
-  Sentry.captureMessage(msg, 'info')
+  // todo
 }
 
 Report.error = function(appid, uin, msg = 'New Error', data = {}) {
-  Sentry.configureScope(function(scope) {
-    scope.setTag('appid', appid)
-    scope.setTag('uin', uin)
-  })
-  Sentry.setTag('Uin', uin)
-  Sentry.setTag('Appid', appid)
-  Sentry.setExtra('data', data)
-  Sentry.captureException(new Error(msg))
+  // todo
 }
 
 // report
@@ -110,7 +86,7 @@ function Report(option) {
     ]
     const apiRules = [
       {
-        url: 'guangdianyun.tv',
+        url: '127.0.0.1:9000/test/gdy',
         rules: {
           data: { name: 'data', permission: [] },
           identify: { name: 'errorCode', permission: [0, 1] },
@@ -228,6 +204,7 @@ function Report(option) {
 
       const rules = ruleObject[0].rules || null
       if (!rules) return false
+      console.log('rules', rules)
 
       // 解析数据
       const response = {}
@@ -270,11 +247,9 @@ function Report(option) {
     function reportData(type, msg = '', data = {}) {
       setTimeout(() => {
         if (type === 'info') {
-          Sentry.setExtra('data', data)
-          Sentry.captureMessage(msg, 'info')
+          console.log(data)
         } else if (type === 'error') {
-          Sentry.setExtra('data', data)
-          Sentry.captureException(new Error(msg))
+          console.log(data)
         }
 
         // 清空无关数据
@@ -431,14 +406,10 @@ function Report(option) {
       }
       switch (type) {
         case 'done':
-          Sentry.setExtra('data', data)
-          Sentry.captureException(
-            new Error(`Api Error:${data.msg || data.statusText}`)
-          )
+          console.log('done', data)
           break
         case 'error':
-          Sentry.setExtra('data', data)
-          Sentry.captureException(new Error(`Request Error:${data.statusText}`))
+          console.log('error', data)
           break
         default:
           break
@@ -450,22 +421,9 @@ function Report(option) {
         performance.clearResourceTimings()
     }
 
-    Sentry.init({
-      dsn: opt.dsn,
-      release: opt.version,
-      environment: environment
-    })
-
-    Sentry.setUser({
-      AppId: opt.appid,
-      Uin: opt.uin,
-      Name: opt.name,
-      Environment: environment
-    })
-
-    Sentry.setTag('Package', require('../package.json').version)
-    Sentry.setTag('Uin', opt.uin)
-    Sentry.setTag('Appid', opt.Appid)
+    // Sentry.setTag('Package', require('../package.json').version)
+    // Sentry.setTag('Uin', opt.uin)
+    // Sentry.setTag('Appid', opt.Appid)
 
     // error上报
     if (opt.isError) _error()

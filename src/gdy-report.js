@@ -1,7 +1,7 @@
 /*
  * @Author: Whzcorcd
  * @Date: 2020-05-08 09:30:56
- * @LastEditTime: 2020-06-09 13:50:21
+ * @LastEditTime: 2020-06-10 14:53:32
  * @Description: Tool's main entry
  * @FilePath: /gdy-sentry-plugin/bin/index.js
  */
@@ -20,19 +20,19 @@ Report.init = function(option) {
 
   Object.assign(opt, option)
 
-  const environment = ''
+  let environment = ''
   switch (opt.env) {
     case 'TEST':
-      environment.concat('development')
+      environment = 'development'
       break
     case 'PRE':
-      environment.concat('preview')
+      environment = 'preview'
       break
     case '':
-      environment.concat('production')
+      environment = 'production'
       break
     default:
-      environment.concat('production')
+      environment = 'production'
       break
   }
   Sentry.init({
@@ -43,19 +43,19 @@ Report.init = function(option) {
 }
 
 Report.setUser = function(appid, uin, name = '', env = '') {
-  const environment = ''
+  let environment = ''
   switch (env) {
     case 'TEST':
-      environment.concat('development')
+      environment = 'development'
       break
     case 'PRE':
-      environment.concat('preview')
+      environment = 'preview'
       break
     case '':
-      environment.concat('production')
+      environment = 'production'
       break
     default:
-      environment.concat('production')
+      environment = 'production'
       break
   }
   Sentry.setUser({
@@ -167,19 +167,19 @@ function Report(option) {
     opt.apiRules = opt.apiRules.concat(apiRules)
     console.log(opt)
 
-    const environment = ''
+    let environment = ''
     switch (opt.env) {
       case 'TEST':
-        environment.concat('development')
+        environment = 'development'
         break
       case 'PRE':
-        environment.concat('preview')
+        environment = 'preview'
         break
       case '':
-        environment.concat('production')
+        environment = 'production'
         break
       default:
-        environment.concat('production')
+        environment = 'production'
         break
     }
 
@@ -221,10 +221,13 @@ function Report(option) {
       const ruleObject = opt.apiRules.filter(item =>
         responseURL.includes(item.url)
       )
-      if (!ruleObject) return
+      if (ruleObject.length > 1) {
+        console.error('API 规则定义重复')
+        return false
+      }
 
-      const rules = ruleObject.rules || []
-      if (!rules) return
+      const rules = ruleObject[0].rules || null
+      if (!rules) return false
 
       // 解析数据
       const response = {}
@@ -233,18 +236,26 @@ function Report(option) {
         typeof xhr.xhr.response === 'string' &&
         xhr.xhr.response.length > 0
       ) {
-        const temp = JSON.parse(xhr.xhr.response)
-        Object.assign(response, temp)
+        try {
+          const temp = JSON.parse(xhr.xhr.response)
+          Object.assign(response, temp)
+        } catch (e) {}
       }
 
       // 接口校验
-      const res = rules.every(item => {
-        item.permission.length === 0 ||
-          item.permission.includes(response[item.name])
-      })
+      let res = false
+
+      for (const item in rules) {
+        console.log(rules[item])
+        if (
+          rules[item].permission.length !== 0 &&
+          !rules[item].permission.includes(response[rules[item].name])
+        )
+          res = true
+      }
 
       const data = {
-        status: xhr.status,
+        status: xhr.xhr.status,
         statusText: xhr.xhr.statusText || '',
         method: xhr.args.method,
         responseURL: xhr.args.url,
@@ -310,9 +321,11 @@ function Report(option) {
           var that = this
           var hook = proxy[attr]
           if (typeof hook === 'function') {
-            xhr[attr] = function() {
-              proxy[attr](that) || v.apply(xhr, arguments)
-            }
+            try {
+              xhr[attr] = function() {
+                proxy[attr](that) || v.apply(xhr, arguments)
+              }
+            } catch (e) {}
           } else {
             var attrSetterHook = (hook || {})['setter']
             v = (attrSetterHook && attrSetterHook(v, that)) || v
@@ -466,10 +479,9 @@ function Report(option) {
           // 2：载入完成，XMLHttpRequest 对象的请求发送完成
           // 3：解析，XMLHttpRequest 对象开始读取服务器的响应
           // 4：完成，XMLHttpRequest 对象读取服务器响应结束
-          if (xhr.readyState === 4) {
-            const responseURL = xhr.xhr.responseURL
-              ? xhr.xhr.responseURL.split('?')[0]
-              : ''
+          // console.log(xhr)
+          if (xhr.xhr.readyState === 4) {
+            const responseURL = xhr.xhr.responseURL ? xhr.xhr.responseURL : ''
             if (
               opt.filterUrl.some(item => responseURL.includes(item)) ||
               !responseURL
@@ -478,10 +490,10 @@ function Report(option) {
             }
 
             setTimeout(() => {
-              if (xhr.status < 200 || xhr.status > 300) {
+              if (xhr.xhr.status < 200 || xhr.xhr.status > 300) {
                 xhr.method = xhr.args.method
                 const data = {
-                  status: xhr.status,
+                  status: xhr.xhr.status,
                   statusText: xhr.xhr.statusText || '',
                   method: xhr.args.method,
                   responseURL: xhr.args.url,
@@ -497,7 +509,7 @@ function Report(option) {
         },
         onerror: function(xhr) {
           if (xhr.args) {
-            const responseURL = xhr.args.url ? xhr.args.url.split('?')[0] : ''
+            const responseURL = xhr.args.url ? xhr.args.url : ''
             if (
               opt.filterUrl.some(item => responseURL.includes(item)) ||
               !responseURL
@@ -514,7 +526,7 @@ function Report(option) {
         },
         open: function(arg, xhr) {
           this.args = {
-            url: arg[1].split('?')[0],
+            url: arg[1],
             method: arg[0] || 'GET',
             type: 'xmlhttprequest'
           }

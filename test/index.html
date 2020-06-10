@@ -1,0 +1,116 @@
+<!--
+ * @Author: Whzcorcd
+ * @Date: 2020-06-09 15:08:06
+ * @LastEditors: Wzhcorcd
+ * @LastEditTime: 2020-06-10 14:37:04
+ * @Description: file content
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>report test</title>
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+  <!-- <link rel="stylesheet" href="inexistent.css"> -->
+  <script src="https://cdn.bootcss.com/jquery/1.12.0/jquery.min.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="./simulate.js"></script>
+  <script>
+    Report({
+      dsn: 'https://2b211cba223646f1975676bc63166584@sentry.guangdianyun.tv/1',
+      version: '',
+      env: 'TEST',
+      filterUrl: []
+    })
+  </script>
+</head>
+
+<body>
+  <div>report test</div>
+  <div>
+    <ul>
+      <li>1</li>
+      <li>2</li>
+      <li>3</li>
+      <li>4</li>
+      <li>5</li>
+    </ul>
+    <h1>标题H1</h1>
+    <h2>标题H2</h2>
+    <h3>标题H3</h3>
+    <h4>标题H4</h4>
+    <h5>标题H5</h5>
+    <h6>标题H6</h6>
+    <div class="clice"><button id="button1">同步点击错误上报按钮</button></div>
+    <div class="clice" style="margin-top:20px;"><button id="button2">异步点击错误上报按钮</button></div>
+    <div class="clice" style="margin-top:20px;"><button id="button3">Ajax</button></div>
+  </div>
+  <script>
+    $('#button1').click(() => {
+      console.log(test_once)
+    })
+    $('#button2').click(() => {
+      Promise.resolve().then(() => {
+        console.log(test_again)
+      })
+    })
+    $('#button3').click(() => {
+      $.ajax({
+        type: 'get',
+        url: 'http://127.0.0.1:9000/test/gdy/normal',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        success: data => {
+          // console.log(data)
+        }
+      })
+
+      $.ajax({
+        type: 'get',
+        url: 'http://127.0.0.1:9000/test/gdy/notlogin',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        success: data => {
+          // console.log(data)
+        }
+      })
+
+      $.ajax({
+        type: 'get',
+        url: 'http://127.0.0.1:9000/test/gdy/other',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        success: data => {
+          // console.log(data)
+        }
+      })
+
+      $.ajax({
+        type: 'get',
+        url: 'http://127.0.0.1:9000/test/gdy/',
+        headers: {},
+        success: data => {
+          // console.log(data)
+        }
+      })
+
+      $.ajax({
+        type: 'get',
+        url: 'http://127.0.0.1:9000/test/gdy/servererror',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        success: data => {
+          // console.log(data)
+        }
+      })
+    })
+  </script>
+</body>
+
+</html>
