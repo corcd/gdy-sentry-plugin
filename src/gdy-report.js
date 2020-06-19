@@ -1,21 +1,21 @@
 /*
  * @Author: Whzcorcd
  * @Date: 2020-05-08 09:30:56
- * @LastEditTime: 2020-06-10 15:18:12
+ * @LastEditTime: 2020-06-19 17:16:52
  * @Description: Tool's main entry
  * @FilePath: /gdy-sentry-plugin/bin/index.js
  */
 const Sentry = require('@sentry/browser')
 // const Integrations = require('@sentry/integrations')
 
-Report.init = function(option) {
+Report.init = function (option) {
   const opt = {
     // sentry dsn
     dsn: '',
     // 版本信息
     version: '1.0.0',
     // 环境变量
-    env: ''
+    env: '',
   }
 
   Object.assign(opt, option)
@@ -38,11 +38,11 @@ Report.init = function(option) {
   Sentry.init({
     dsn: String(opt.dsn),
     release: opt.version,
-    environment: environment
+    environment: environment,
   })
 }
 
-Report.setUser = function(appid, uin, name = '', env = '') {
+Report.setUser = function (appid, uin, name = '', env = '') {
   let environment = ''
   switch (env) {
     case 'TEST':
@@ -62,12 +62,12 @@ Report.setUser = function(appid, uin, name = '', env = '') {
     AppId: appid,
     Uin: uin,
     Name: name,
-    Environment: environment
+    Environment: environment,
   })
 }
 
-Report.api = function(appid, uin, msg, data = {}) {
-  Sentry.configureScope(function(scope) {
+Report.api = function (appid, uin, msg, data = {}) {
+  Sentry.configureScope(function (scope) {
     scope.setTag('appid', appid)
     scope.setTag('uin', uin)
   })
@@ -77,8 +77,8 @@ Report.api = function(appid, uin, msg, data = {}) {
   Sentry.captureException(new Error(`Api Error:${msg}`))
 }
 
-Report.info = function(appid, uin, msg = 'Info', data = {}) {
-  Sentry.configureScope(function(scope) {
+Report.info = function (appid, uin, msg = 'Info', data = {}) {
+  Sentry.configureScope(function (scope) {
     scope.setTag('appid', appid)
     scope.setTag('uin', uin)
   })
@@ -88,8 +88,8 @@ Report.info = function(appid, uin, msg = 'Info', data = {}) {
   Sentry.captureMessage(msg, 'info')
 }
 
-Report.error = function(appid, uin, msg = 'New Error', data = {}) {
-  Sentry.configureScope(function(scope) {
+Report.error = function (appid, uin, msg = 'New Error', data = {}) {
+  Sentry.configureScope(function (scope) {
     scope.setTag('appid', appid)
     scope.setTag('uin', uin)
   })
@@ -106,7 +106,7 @@ function Report(option) {
       '/sockjs-node/info',
       'arms-retcode.aliyuncs.com',
       'aliyuncs.com',
-      'ynuf.aliapp.org'
+      'ynuf.aliapp.org',
     ]
     const apiRules = [
       {
@@ -114,9 +114,9 @@ function Report(option) {
         rules: {
           data: { name: 'data', permission: [] },
           identify: { name: 'errorCode', permission: [0, 1] },
-          msg: { name: 'errorMessage', permission: [] }
-        }
-      }
+          msg: { name: 'errorMessage', permission: [] },
+        },
+      },
       // {
       //   url: 'aodianyun.com',
       //   rules: {
@@ -150,7 +150,7 @@ function Report(option) {
       // 是否上报 ajax 数据
       isAjax: true,
       // 是否上报错误信息
-      isError: true
+      isError: true,
     }
     // apiRules 格式
     // const apiRules = {
@@ -211,18 +211,21 @@ function Report(option) {
         //request请求耗时
         reqt: timing.responseEnd - timing.requestStart || 0,
         //页面解析dom耗时
-        andt: timing.domComplete - timing.domInteractive || 0
+        andt: timing.domComplete - timing.domInteractive || 0,
       }
       reportData('info', 'Page Performance', data)
     }
 
     // 类型分配
     function sortOut(responseURL, xhr) {
-      const ruleObject = opt.apiRules.filter(item =>
+      const ruleObject = opt.apiRules.filter((item) =>
         responseURL.includes(item.url)
       )
       if (ruleObject.length > 1) {
         console.error('API 规则定义重复')
+        return false
+      } else if (!ruleObject) {
+        console.error('当前缺少匹配的规则')
         return false
       }
 
@@ -261,7 +264,7 @@ function Report(option) {
         responseURL: xhr.args.url,
         data: response[rules.data.name] || null,
         identify: response[rules.identify.name] || null,
-        msg: response[rules.msg.name] || ''
+        msg: response[rules.msg.name] || '',
       }
       res && ajaxResponse('done', data)
     }
@@ -287,7 +290,7 @@ function Report(option) {
     // ajax重写
     function _Ajax(proxy) {
       window._ahrealxhr = window._ahrealxhr || XMLHttpRequest
-      XMLHttpRequest = function() {
+      XMLHttpRequest = function () {
         this.xhr = new window._ahrealxhr()
         for (var attr in this.xhr) {
           var type = ''
@@ -299,14 +302,14 @@ function Report(option) {
           } else {
             Object.defineProperty(this, attr, {
               get: getFactory(attr),
-              set: setFactory(attr)
+              set: setFactory(attr),
             })
           }
         }
       }
 
       function getFactory(attr) {
-        return function() {
+        return function () {
           var v = this.hasOwnProperty(attr + '_')
             ? this[attr + '_']
             : this.xhr[attr]
@@ -316,13 +319,13 @@ function Report(option) {
       }
 
       function setFactory(attr) {
-        return function(v) {
+        return function (v) {
           var xhr = this.xhr
           var that = this
           var hook = proxy[attr]
           if (typeof hook === 'function') {
             try {
-              xhr[attr] = function() {
+              xhr[attr] = function () {
                 proxy[attr](that) || v.apply(xhr, arguments)
               }
             } catch (e) {}
@@ -339,7 +342,7 @@ function Report(option) {
       }
 
       function hookfun(fun) {
-        return function() {
+        return function () {
           var args = [].slice.call(arguments)
           if (proxy[fun] && proxy[fun].call(this, args, this.xhr)) {
             return
@@ -355,34 +358,34 @@ function Report(option) {
       // img, script, css, jsonp
       window.addEventListener(
         'error',
-        function(e) {
+        function (e) {
           const data = {
             t: new Date().getTime(),
             msg: e.target.localName + ' is load error',
             target: e.target.localName,
             type: e.type,
-            resourceUrl: e.target.href || e.target.currentSrc
+            resourceUrl: e.target.href || e.target.currentSrc,
           }
           reportData('error', 'Resource Error', data)
         },
         true
       )
       // js
-      window.onerror = function(msg, _url, line, col, error) {
-        setTimeout(function() {
+      window.onerror = function (msg, _url, line, col, error) {
+        setTimeout(function () {
           col = col || (window.event && window.event.errorCharacter) || 0
           const data = {
             t: new Date().getTime(),
             msg: error && error.stack ? error.stack.toString() : msg,
             resourceUrl: _url,
             line: line,
-            col: col
+            col: col,
           }
           // 上报错误信息
           reportData('error', 'Script Error', data)
         }, 0)
       }
-      window.addEventListener('unhandledrejection', function(e) {
+      window.addEventListener('unhandledrejection', function (e) {
         const error = e && e.reason
         const message = error.hasOwnProperty('message') ? error.message : ''
         const stack = error.stack || ''
@@ -391,7 +394,7 @@ function Report(option) {
         let errs = stack.match(/\(.+?\)/)
         if (errs && errs.length) {
           errs = errs[0]
-          errs = errs.replace(/\w.+[js|html]/g, $1 => {
+          errs = errs.replace(/\w.+[js|html]/g, ($1) => {
             resourceUrl = $1
             return ''
           })
@@ -404,18 +407,18 @@ function Report(option) {
           msg: message,
           resourceUrl: resourceUrl,
           line: col,
-          col: line
+          col: line,
         }
         reportData('error', 'Unhandledrejection', data)
       })
       // 重写console.error
       const oldError = console.error
-      console.error = function(e) {
-        setTimeout(function() {
+      console.error = function (e) {
+        setTimeout(function () {
           const data = {
             t: new Date().getTime(),
             msg: e,
-            resourceUrl: location.href
+            resourceUrl: location.href,
           }
           reportData('error', 'Console Error', data)
         }, 0)
@@ -426,7 +429,7 @@ function Report(option) {
     // ajax统一上报入口
     function ajaxResponse(type, data) {
       const url = data.responseURL
-      if (filterUrl.some(item => url.includes(item))) {
+      if (filterUrl.some((item) => url.includes(item))) {
         return
       }
       switch (type) {
@@ -453,14 +456,14 @@ function Report(option) {
     Sentry.init({
       dsn: opt.dsn,
       release: opt.version,
-      environment: environment
+      environment: environment,
     })
 
     Sentry.setUser({
       AppId: opt.appid,
       Uin: opt.uin,
       Name: opt.name,
-      Environment: environment
+      Environment: environment,
     })
 
     Sentry.setTag('Package', require('../package.json').version)
@@ -473,7 +476,7 @@ function Report(option) {
     //  拦截ajax
     if (opt.isAjax || opt.isError) {
       _Ajax({
-        onreadystatechange: function(xhr) {
+        onreadystatechange: function (xhr) {
           // 0：初始化，XMLHttpRequest 对象还没有完成初始化
           // 1：载入，XMLHttpRequest 对象开始发送请求
           // 2：载入完成，XMLHttpRequest 对象的请求发送完成
@@ -483,7 +486,7 @@ function Report(option) {
           if (xhr.xhr.readyState === 4) {
             const responseURL = xhr.xhr.responseURL ? xhr.xhr.responseURL : ''
             if (
-              opt.filterUrl.some(item => responseURL.includes(item)) ||
+              opt.filterUrl.some((item) => responseURL.includes(item)) ||
               !responseURL
             ) {
               return
@@ -498,7 +501,7 @@ function Report(option) {
                   method: xhr.args.method,
                   responseURL: xhr.args.url,
                   data: xhr.xhr.response || null,
-                  msg: ''
+                  msg: '',
                 }
                 ajaxResponse('done', data)
               } else {
@@ -507,11 +510,11 @@ function Report(option) {
             }, 600)
           }
         },
-        onerror: function(xhr) {
+        onerror: function (xhr) {
           if (xhr.args) {
             const responseURL = xhr.args.url ? xhr.args.url : ''
             if (
-              opt.filterUrl.some(item => responseURL.includes(item)) ||
+              opt.filterUrl.some((item) => responseURL.includes(item)) ||
               !responseURL
             ) {
               return
@@ -519,26 +522,26 @@ function Report(option) {
             const data = {
               method: xhr.args.method,
               responseURL: responseURL,
-              statusText: 'XHR request error'
+              statusText: 'XHR request error',
             }
             ajaxResponse('error', data)
           }
         },
-        open: function(arg, xhr) {
+        open: function (arg, xhr) {
           this.args = {
             url: arg[1],
             method: arg[0] || 'GET',
-            type: 'xmlhttprequest'
+            type: 'xmlhttprequest',
           }
           clear()
-        }
+        },
       })
     }
 
     // 绑定onload事件
     window.addEventListener(
       'load',
-      function() {
+      function () {
         //页面性能上报
         if (opt.isPage) perforPage()
       },
@@ -552,7 +555,7 @@ function Report(option) {
 if (typeof exports === 'object') {
   module.exports = Report
 } else if (typeof define === 'function' && define.amd) {
-  define([], function() {
+  define([], function () {
     return Report
   })
 } else {

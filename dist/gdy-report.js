@@ -1,7 +1,7 @@
 /*
  * @Author: Whzcorcd
  * @Date: 2020-05-08 09:30:56
- * @LastEditTime: 2020-06-10 15:18:12
+ * @LastEditTime: 2020-06-19 17:15:17
  * @Description: Tool's main entry
  * @FilePath: /gdy-sentry-plugin/bin/index.js
  */
@@ -223,6 +223,10 @@ function Report(option) {
       )
       if (ruleObject.length > 1) {
         console.error('API 规则定义重复')
+        return false
+      }
+      else if(!ruleObject) {
+        console.error('当前缺少匹配的规则')
         return false
       }
 
